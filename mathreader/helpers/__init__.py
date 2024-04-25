@@ -91,7 +91,3 @@ def get_labels():
             "30": "=",
         },
     }
-
-
-def debug(data):
-    print(data)

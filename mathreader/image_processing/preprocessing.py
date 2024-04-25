@@ -125,14 +125,9 @@ class ImagePreprocessing:
         return image
 
     def segment(self, img):
-        helpers.debug("[preprocessing.py] segment()")
         image = img.copy()
         symbols = []
         cnts, somethingElse = cv2.findContours(image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        helpers.debug("[preprocessing.py] segment() | contours founded:")
-        helpers.debug(len(cnts))
-
         for i in range(len(cnts)):
             # It was 0 and was changed to 10 to try reducing the noise
             if cv2.contourArea(cnts[i]) < 10:
@@ -234,6 +229,6 @@ class ImagePreprocessing:
 if __name__ == "__main__":
 
     p = ImagePreprocessing()
-    segmentation, image = p.treatment("/home/user/PycharmProjects/mathreader/mathreader/images/1.png")
+    segmentation, image = p.treatment("/home/user/PycharmProjects/recognizer/mathreader/images/1.png")
 
     print(image)

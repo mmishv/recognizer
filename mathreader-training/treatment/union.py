@@ -2,7 +2,7 @@
 import numpy as np
 from sklearn.utils import shuffle
 
-treatment_dir = "/home/user/PycharmProjects/mathreader/mathreader-training/treatment/"
+treatment_dir = "/home/user/PycharmProjects/recognizer/mathreader-training/treatment/"
 treated_dir = "treated_data/"
 
 path = treatment_dir + treated_dir

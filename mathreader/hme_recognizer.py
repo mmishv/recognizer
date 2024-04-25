@@ -1,8 +1,6 @@
 import base64
 
 import cv2
-import numpy as np
-
 from mathreader.hme_parser import parser as parser
 from mathreader.recognize import *
 
@@ -44,7 +42,6 @@ class HME_Recognizer:
             return parsed_data["latex_string"]
 
         except Exception as e:
-            print("[api.py] __to_parse | Exception:")
             raise e
 
     def load_image(self, image, data_type="base64"):
@@ -95,10 +92,6 @@ class HME_Recognizer:
 
                 return parsed_expression, image
             else:
-                print(
-                    "[api.py] recognize | \
-                    Exception: You must enter an image"
-                )
                 raise Exception("You must enter an image.")
         except Exception as e:
             print("[api.py] recognize | Exception:", e)

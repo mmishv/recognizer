@@ -7,7 +7,7 @@ from model import TrainingModel
 
 keras.regularizers.l2(0.01)
 
-path = "/home/user/PycharmProjects/mathreader/mathreader-training/"
+path = "/home/user/PycharmProjects/recognizer/mathreader-training/"
 configs = {
     "dataset": {
         "training_images": path + "treatment/treated_data/training_images_dataset.npz",

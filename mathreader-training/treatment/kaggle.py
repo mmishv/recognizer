@@ -8,7 +8,7 @@ from sklearn.utils import shuffle
 from threading import Thread
 
 
-treatment_dir = "/home/user/PycharmProjects/mathreader/mathreader-training/treatment/"
+treatment_dir = "/home/user/PycharmProjects/recognizer/mathreader-training/treatment/"
 treated_dir = "treated_data/"
 
 if not os.path.exists(treatment_dir + treated_dir):
