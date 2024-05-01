@@ -1,15 +1,16 @@
 from matplotlib import pyplot as plt
 
 from mathreader.helpers.exceptions import *
-from mathreader.hme_recognizer import *
+from mathreader.hmerecognizer import *
 import mathreader
 
 
 class Example:
     def __init__(self):
         expression = ""
-        hme_recognizer = HME_Recognizer()
-        images = [mathreader.__path__[0] + "/images/79.png"]
+        hme_recognizer = HMERecognizer()
+        #  9, 79, 37b - not solve (
+        images = [mathreader.__path__[0] + "/images/37b.png"]
         for image in images:
             try:
                 hme_recognizer.load_image(image, data_type="path")
@@ -20,11 +21,11 @@ class Example:
                 print("\nLex errors: ", lex_errors)
                 print("\nPure Lex Errors:", pure_lex_errors)
                 print("\nOriginal Expression: ", latex_string_original)
-            except (GrammarError, SintaticError, LexicalError) as e:
+            except (GrammarError, CustomSyntaxError, LexicalError) as e:
                 if "latex_string_original" in e.data:
                     expression = e.data["latex_string_original"]
-                print("[example.py] Exception: ", e.data)
-                print("[example.py] Exception: ", e.valor)
+                print("Exception: ", e.data)
+                print("Exception: ", e.valor)
             print("\nExpression: ", expression)
             plt.text(0.5, 0.5, f"${expression}$", fontsize=12, horizontalalignment="center", verticalalignment="center")
             plt.axis("off")

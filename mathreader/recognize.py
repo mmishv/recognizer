@@ -30,6 +30,7 @@ class Recognize:
         img = img.reshape(1, 28, 28, 1)
         model = load_model(
             "/home/user/PycharmProjects/recognizer/mathreader-training/training/model/model_26-04-2024_03-54-57-BEST.h5"
+            # "/home/user/PycharmProjects/recognizer/mathreader-training/training/model/model_26-04-2024_03-37-47.h5"
         )
         prediction = model.predict(img)
         index = np.argmax(prediction)

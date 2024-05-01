@@ -6,24 +6,17 @@ import re
 import math
 from sklearn.utils import shuffle
 from threading import Thread
+from union import treatment_dir
 
 
-treatment_dir = "/home/user/PycharmProjects/recognizer/mathreader-training/treatment/"
 treated_dir = "treated_data/"
-
+main_dir = treatment_dir + "datasets/kaggle/"
 if not os.path.exists(treatment_dir + treated_dir):
     os.mkdir(treatment_dir + treated_dir)
 
-main_dir = treatment_dir + "datasets/kaggle/"
-
 
 def get_symbols():
-
-    training_images = []
-    training_labels = []
-    testing_images = []
-    testing_labels = []
-
+    training_images, training_labels, testing_images, testing_labels = [], [], [], []
     dirs = [
         "0/",
         "1/",
@@ -93,66 +86,43 @@ def get_symbols():
 
     configs = {"black": False, "dilate": True, "dataset": True, "resize": "smaller"}
 
-    def parallel(interval, tid):
-        train_images = []
-        train_labels = []
-        test_images = []
-        test_labels = []
-
+    def parallel(interval):
+        train_images, train_labels, test_images, test_labels = [], [], [], []
         for j in range(interval[0], interval[1] + 1):
             files = dirs[j]
             f = os.listdir(main_dir + files)
-            count = 1
-            amount = len(f)
-            training_size = math.floor(amount * 80 / 100)
-            testing_size = math.floor(amount * 20 / 100)
-
+            count, amount = 1, len(f)
+            training_size, testing_size = math.floor(amount * 80 / 100), math.floor(amount * 20 / 100)
             for filename in f:
                 if re.search("\.(jpg|jpeg|png)$", filename, re.IGNORECASE):
-                    if count <= training_size:
-                        image = cv2.imread(main_dir + files + filename)
-                        image = preprocessing.ImagePreprocessing(configs).treatment_sem_segment(image)
-                        if len(image) > 0:
-                            train_images.append(image)
-                            train_labels.append(labels[files])
-                        else:
-                            print("EMPTY: ", main_dir + files + filename)
-                    elif count <= training_size + testing_size:
-                        image = cv2.imread(main_dir + files + filename)
-                        image = preprocessing.ImagePreprocessing(configs).treatment_sem_segment(image)
-                        if len(image) > 0:
-                            test_images.append(image)
-                            test_labels.append(labels[files])
-                        else:
-                            print("EMPTY: ", main_dir + files + filename)
+                    image = cv2.imread(main_dir + files + filename)
+                    image = preprocessing.ImagePreprocessing(configs).treatment_sem_segment(image)
+                    if image and count <= training_size:
+                        train_images.append(image)
+                        train_labels.append(labels[files])
+                    elif image and count <= training_size + testing_size:
+                        test_images.append(image)
+                        test_labels.append(labels[files])
                     else:
                         break
-
-                    count = count + 1
-
+                    count += 1
         training_images.extend(train_images)
         training_labels.extend(train_labels)
         testing_images.extend(test_images)
         testing_labels.extend(test_labels)
 
-    size = len(dirs) // 16
-    remain = len(dirs) % 16
-    initial = 0
-    threads = []
-
+    size, remain = len(dirs) // 16, len(dirs) % 16
+    initial, threads = 0, []
     for i in range(size, len(dirs) + 1, size):
         if i == len(dirs) - remain:
             interval = (initial, i - 1 + remain)
         else:
             interval = (initial, i - 1)
         initial += size
-
         t = Thread(target=parallel, args=(interval, i))
         threads.append(t)
-
     for t in threads:
         t.start()
-
     for t in threads:
         t.join()
 

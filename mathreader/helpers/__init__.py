@@ -16,8 +16,8 @@ subst = {
 
 def show_image(image):
     pass
-    # cv.namedWindow("Imagem", cv.WINDOW_NORMAL)
-    # cv.imshow("Imagem", image)
+    # cv.namedWindow("Image", cv.WINDOW_NORMAL)
+    # cv.imshow("Image", image)
     # cv.waitKey(0)
     # cv.destroyAllWindows()
 

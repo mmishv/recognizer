@@ -10,8 +10,8 @@ class GrammarError(Exception):
         return self.valor
 
 
-class SintaticError(Exception):
-    def __init__(self, data=None, valor="Could not solve the sintatic error"):
+class CustomSyntaxError(Exception):
+    def __init__(self, data=None, valor="Could not solve the syntax error"):
         self.valor = valor
         self.data = data
 

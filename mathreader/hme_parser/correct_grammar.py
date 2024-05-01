@@ -1,67 +1,57 @@
 import numpy as np
 from mathreader import helpers
-from mathreader.hme_parser.grammar import lex as lex
-from mathreader.hme_parser.grammar import yacc as yacc
 
 helpers_labels = helpers.get_labels()
 labels = helpers_labels['labels_parser']
 
 
-class CorrectGrammar():
+class CorrectGrammar:
 
     def __init__(self):
         pass
 
-    def correct_grammar_lex(self, errors, latex, latex_list, index=0,
+    @staticmethod
+    def correct_grammar_lex(errors, latex, latex_list, index=0,
                             previous_errors=None):
         if previous_errors is None:
             previous_errors = []
         latex_string = ""
-        previous_attemptions = []
-
-        # It adds previous attempts to the array
+        previous_attempts = []
         for error in previous_errors:
             if error['attempts'] and len(error['attempts']) > 0:
-                previous_attemptions.extend(error['attempts'])
+                previous_attempts.extend(error['attempts'])
         if len(errors) > 0:
-
-            pos = errors[index]['pos']
             pos_list = errors[index]['pos_list']
             pred = errors[index]['prediction'].copy()
             subst = helpers.subst
-            # When there's predictions it is a numpy array, not a list.
             if not isinstance(pred, list):
                 json_label = 'labels_parser'
 
-                def get_new_index(pred):
+                def get_new_index(last):
+                    new_last = last.copy()
+                    new_last[0][np.argmax(last)] = 0
+                    new_idx = np.argmax(new_last)
+                    return new_idx, new_last
 
-                    new_pred = pred.copy()
-                    new_pred[0][np.argmax(pred)] = 0
-                    new_index = np.argmax(new_pred)
-                    return new_index, new_pred
-
-                def recur_get_new_index(pred):
-                    new_index, pred = get_new_index(pred)
-                    label_recog = helpers_labels[json_label][str(new_index)]
-                    new_label = helpers_labels["labels_recognition"][label_recog]
-                    new_identification = labels[new_label]
-                    if new_identification in errors[index]['attempts'] or \
-                            new_identification in previous_attemptions:
-                        return recur_get_new_index(pred)
+                def get_new_index_recursive(last):
+                    new_idx, last = get_new_index(last)
+                    label_rec = helpers_labels[json_label][str(new_idx)]
+                    new_label = helpers_labels["labels_recognition"][label_rec]
+                    new_ident = labels[new_label]
+                    if new_ident in errors[index]['attempts'] or \
+                            new_ident in previous_attempts:
+                        return get_new_index_recursive(last)
                     else:
-                        if new_identification == '{':
-                            new_identification = '\\{'
-                        if new_identification == '}':
-                            new_identification = '\\}'
+                        if new_ident == '{':
+                            new_ident = '\\{'
+                        if new_ident == '}':
+                            new_ident = '\\}'
+                        return new_idx, last, new_ident
 
-                        return new_index, pred, new_identification
-
-                new_index, new_pred, new_identification = recur_get_new_index(pred)
+                new_index, new_pred, new_identification = get_new_index_recursive(pred)
                 errors[index]['prediction'] = new_pred
                 errors[index]['attempts'].append(new_identification)
-                # Make it more 'Pythonic' later
                 if new_identification in subst:
-                    # list of substitutions
                     substitution_list = subst[new_identification]
                     for substitution_index in range(0, len(substitution_list)):
                         for substitution in substitution_list[substitution_index]:

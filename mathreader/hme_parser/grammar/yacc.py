@@ -2,13 +2,13 @@ from mathreader.hme_parser.grammar import lex
 from mathreader.hme_parser.grammar.lex import tokens
 import ply.yacc as yacc
 
+
 def latex_parse(latex):
     error_list = []
     acceptance = []
 
     def p_gl(p):
         'GL : EL'
-        # print('Aceita')
         acceptance.append('p_gl')
 
     def p_el_er_eq_er(p):
@@ -58,14 +58,6 @@ def latex_parse(latex):
     def p_er_subsc_pw(p):
         'SUBSC : PW'
         acceptance.append('p_er_subsc_pw')
-
-    # def p_t_t_cdot_pw(p):
-    #     'T : PW CDOT T'
-    #     acceptance.append('p_t_t_cdot_pw')
-
-    # def p_t_pw(p):
-    #     'T : PW'
-    #     acceptance.append('p_t_pw')
 
     def p_pw_pw_pow_fr(p):
         'PW : FR POW PW'
@@ -144,17 +136,12 @@ def latex_parse(latex):
         acceptance.append('p_b_openc')
 
     def p_error(p):
-        global parser
-
-        print("Syntax error in input!", p)
-
         erro = {
             'lexpos': None,
             'lineno': None,
             'type': None,
             'value': None
         }
-
         if p:
             erro.update({
                 'lexpos': p.lexpos,
@@ -162,16 +149,9 @@ def latex_parse(latex):
                 'type': p.type,
                 'value': p.value
             })
-
         error_list.append(erro)
-
     parser = yacc.yacc()
-    result = parser.parse(latex)
-
-    if result:
-        print("[yacc.py] Result: ", result)
-
+    parser.parse(latex)
     return error_list
 
-if __name__ == "__main__":
-    latex_parse(input(':'))
+

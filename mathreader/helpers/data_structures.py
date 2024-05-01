@@ -27,14 +27,10 @@ class Stack:
             else:
                 self.top = None
             return data
-        else:
-            return None
+        return None
 
     def peek(self):
-        if self.top:
-            return self.top.data
-        else:
-            return None
+        return self.top.data if self.top else None
 
     def is_empty(self):
         return self.size == 0
@@ -75,14 +71,10 @@ class Queue:
             self.head = self.head.next
             self.head.prev = None
             self.count -= 1
-
         return current.data
 
     def peek(self):
-        if self.head:
-            return self.head.data
-        else:
-            return None
+        return self.head.data if self.head else None
 
     def is_empty(self):
         return self.count == 0
@@ -126,20 +118,11 @@ class Tree:
         current = self.root_node if not root_node else root_node
         if current is None:
             return
-
-        if isinstance(current.data, str):
-            print(current.data)
-        else:
-            try:
-                print()
-            except Exception:
-                print("")
-
         for node in current.children:
             self.preorder(node)
 
     def insert(self, data, insert_node=None, _type="TreeNode"):
-
+        node = None
         if _type == "Region":
             node = RegionNode(data)
         elif _type == "Symbol":
@@ -150,19 +133,5 @@ class Tree:
             node = data
         current = insert_node if insert_node else self.root_node
         parent = current
-
         parent.children.append(node)
-
         return node
-
-
-if __name__ == "__main__":
-    tree = Tree()
-    a = tree.insert("A")
-    b = tree.insert("B")
-    c = tree.insert("C")
-    p = tree.insert("=P", c)
-    d = tree.insert("D", b)
-    eight = tree.insert("8", b)
-    haha = tree.insert("haha", b)
-    tree.preorder()

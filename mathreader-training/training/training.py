@@ -1,3 +1,5 @@
+import os
+
 import tensorflow.keras as keras
 from tensorflow.keras import optimizers
 from tensorflow.keras.layers import Conv2D
@@ -7,7 +9,7 @@ from model import TrainingModel
 
 keras.regularizers.l2(0.01)
 
-path = "/home/user/PycharmProjects/recognizer/mathreader-training/"
+path = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + "/"
 configs = {
     "dataset": {
         "training_images": path + "treatment/treated_data/training_images_dataset.npz",

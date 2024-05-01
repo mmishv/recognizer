@@ -10,12 +10,11 @@ from datetime import datetime
 
 ACCURACY_THRESHOLD = 0.997
 VAL_ACCURACY_THRESHOLD = 0.998
-
 LOSS_THRESHOLD = 0.02
 VAL_LOSS_THRESHOLD = 0.02
 
 
-class myCallback(tf.keras.callbacks.Callback):
+class CustomCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if logs is None:
             logs = {}
@@ -26,8 +25,8 @@ class myCallback(tf.keras.callbacks.Callback):
                 and logs.get("val_loss") <= VAL_LOSS_THRESHOLD
                 and logs.get("loss") <= LOSS_THRESHOLD
             ):
-                print("\nReached %2.2f%% accuracy, so stopping training!!" % (ACCURACY_THRESHOLD * 100))
-                print("\nReached %2.2f%% val_accuracy, so stopping training!!" % (VAL_ACCURACY_THRESHOLD * 100))
+                print("\nReached %2.2f%% accuracy, so stopping training" % (ACCURACY_THRESHOLD * 100))
+                print("\nReached %2.2f%% val_accuracy, so stopping training" % (VAL_ACCURACY_THRESHOLD * 100))
                 self.model.stop_training = True
         except BaseException as e:
             print(e)
@@ -46,7 +45,6 @@ class TrainingModel:
             "binary": False,
         }
         self.configs.update(configs)
-
         self.images = []
         self.labels = []
         self.test_images = []
@@ -60,46 +58,42 @@ class TrainingModel:
         self.test_images_file_name = self.configs["dataset"]["testing_images"]
         self.nn_output_dimension = self.configs["nn_output"]
         matplotlib.use("tkagg")
-
         self.adjust_data()
 
-    def get_data(self, file_name):
+    @staticmethod
+    def get_data(file_name):
         data = np.load(file_name)
         return data["arr_0"]
 
     def adjust_data(self):
         images = self.get_data(self.train_images_file_name)
+        labels = self.get_data(self.train_labels_file_name)
         self.images = images.reshape(
             images.shape[0], self.image_width, self.image_height, self.image_channels
-        )  # (batch, height, width, channels) # 1000, 28, 28, 1
-
-        labels = self.get_data(self.train_labels_file_name)
+        )
         if self.configs["binary"]:
             self.labels = labels
         else:
             self.labels = keras.utils.to_categorical(labels, self.nn_output_dimension)
-
         test_images = self.get_data(self.test_images_file_name)
+        test_labels = self.get_data(self.test_labels_file_name)
         self.test_images = test_images.reshape(
             test_images.shape[0], self.image_width, self.image_height, self.image_channels
         )
-
-        test_labels = self.get_data(self.test_labels_file_name)
         if self.configs["binary"]:
             self.test_labels = test_labels
         else:
             self.test_labels = keras.utils.to_categorical(test_labels, self.nn_output_dimension)
 
-    def instantiate_classifier(self):
-        classifier = Sequential()
-        return classifier
+    @staticmethod
+    def instantiate_classifier():
+        return Sequential()
 
     def set_model(self, model_function, params=None):
         if params:
             classifier = model_function(params)
         else:
             classifier = model_function()
-
         self.classifier = classifier
 
     def get_model(self):
@@ -120,33 +114,30 @@ class TrainingModel:
         return datagen
 
     def train(self):
-        callbacks = myCallback()
-        # callbackES = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5)
-        # callbackES = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3) # 22:54 changed
-        callbackES1 = tf.keras.callbacks.EarlyStopping(
+        callbacks = CustomCallback()
+        # callback_es = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5)
+        # callback_es = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3) # 22:54 changed
+        callback_es1 = tf.keras.callbacks.EarlyStopping(
             monitor="loss", patience=3, restore_best_weights=True
-        )  # 28/06 15:12
-        callbackES2 = tf.keras.callbacks.EarlyStopping(
+        )
+        callback_es2 = tf.keras.callbacks.EarlyStopping(
             monitor="val_loss", patience=3, restore_best_weights=True
-        )  # 28/06 15:12
-
+        )
         datagen = self.data_augmentation()
-
-        self.train = self.classifier.fit_generator(
+        self.train = self.classifier.fit(
             datagen.flow(self.images, self.labels, batch_size=self.configs["model"]["batch_size"]),
             epochs=self.configs["model"]["epochs"],
             steps_per_epoch=(
                 len(self.images) // self.configs["model"]["batch_size"]
-            ),  # * 1.5, # * 3 (16/06 até 21:08), # * 2, # not number
+            ),
             validation_data=(self.test_images, self.test_labels),
-            callbacks=[callbacks, callbackES1, callbackES2],  # changed 26/06 15:13
+            callbacks=[callbacks, callback_es1, callback_es2],
         )
         return self.train
 
     def visualize(self, result):
         now = datetime.now()
         dt_string = now.strftime("%d-%m-%Y_%H-%M-%S")
-
         plt.plot(result.history["accuracy"])
         plt.plot(result.history["val_accuracy"])
         plt.title("model accuracy")
@@ -156,7 +147,6 @@ class TrainingModel:
         fig = plt.gcf()
         fig.savefig(self.configs["path"]["chart"] + "acc_" + dt_string, dpi=100)
         plt.show()
-
         plt.plot(result.history["loss"])
         plt.plot(result.history["val_loss"])
         plt.title("model loss")

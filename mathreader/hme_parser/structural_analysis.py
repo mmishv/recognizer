@@ -12,18 +12,16 @@ class StructuralAnalysis:
         self.symbols = symbol_list
 
     def analyze(self):
-        symbols = self.symbols
-        symbols = self.__preprocessing(symbols)
-        tree = self.__main_parsing(symbols)
+        tree = self.__main_parsing(self.__preprocessing(self.symbols))
         if not tree:
             return
         tlist = self.__tree_to_list(tree)
         latex = self.__list_to_latex_obj(tlist)
         return {"latex": latex, "tree": tree, "tlist": tlist}
 
-    def __preprocessing(self, symbols):
-        xmin_sorted = sorted(symbols, key=lambda i: i["xmin"])
-        symbols = xmin_sorted
+    @staticmethod
+    def __preprocessing(symbols):
+        symbols = sorted(symbols, key=lambda i: i["xmin"])
         for i in range(0, len(symbols)):
             s = symbols[i]
             s["centroid"] = list(s["centroid"])
@@ -57,268 +55,212 @@ class StructuralAnalysis:
         return symbols
 
     def __main_parsing(self, symbols):
-        listin = symbols
-        T = DS.Tree()
-        Q = DS.Queue()
-        S = DS.Stack()
-        temp1 = 0
-        temp2 = 0
-        R = [[0, 0], [9999999999, 9999999999]]
-        sstart = self.__sp(listin, R)
-        if sstart == -1:
+        list_in, tree, queue, stack = symbols, DS.Tree(), DS.Queue(), DS.Stack()
+        r = [[0, 0], [9999999999, 9999999999]]
+        if (start := self.__sp(list_in, r)) == -1:
             return
-        listin[sstart]
-        Q.enqueue(sstart)
-        Q.enqueue(T.root_node)
-        listin[sstart]["checked"] = True
-        while not Q.is_empty():
-            while not Q.is_empty():
-                temp1 = Q.dequeue()  # a, 2
-                ParentNode = Q.dequeue()
-                SymbolNode = DS.SymbolNode(listin[temp1])
-                T.insert(SymbolNode, ParentNode, "Node")
-                S.push(temp1)  # a, 2
-                S.push(SymbolNode)
-                temp2 = self.__hor(listin, temp1)  # b, -
+        queue.enqueue(start)
+        queue.enqueue(tree.root_node)
+        list_in[start]["checked"] = True
+        while not queue.is_empty():
+            while not queue.is_empty():
+                temp1, parent_node = queue.dequeue(), queue.dequeue()
+                symbol_node = DS.SymbolNode(list_in[temp1])
+                tree.insert(symbol_node, parent_node, "Node")
+                stack.push(temp1)
+                stack.push(symbol_node)
+                temp2 = self.__hor(list_in, temp1)
                 while temp2 != -1:
-                    listin[temp2]["checked"] = True
-                    listin[temp2]["wall"] = listin[temp1]["wall"].copy()
-                    SymbolNode = DS.SymbolNode(listin[temp2])
-                    T.insert(SymbolNode, ParentNode, "Node")
-                    S.push(temp2)
-                    S.push(SymbolNode)
-                    listin[temp1]["wall"]["right"] = listin[temp2]["xmin"]
-                    temp1 = temp2  # b
-                    temp2 = self.__hor(listin, temp1)  # c - 1
-            S.push("EOBL")
-            while not S.is_empty():
-                if S.peek() == "EOBL":
-                    S.pop()
-                SymbolNode = S.pop()
-                temp1 = S.pop()  # c
-                label = int(listin[temp1]["label"])
-                # 1/6
-                upperThreshold = listin[temp1]["ymin"] + ((1 / 6.5) * listin[temp1]["h"])
-                # 5/6
-                lowerThreshold = listin[temp1]["ymin"] + ((5.5 / 6.5) * listin[temp1]["h"])
-                leftThreshold = (
-                    (listin[temp1]["xmin"] + ((1 / 6) * listin[temp1]["w"])) if label != 10 else listin[temp1]["xmin"]
+                    list_in[temp2]["checked"] = True
+                    list_in[temp2]["wall"] = list_in[temp1]["wall"].copy()
+                    symbol_node = DS.SymbolNode(list_in[temp2])
+                    tree.insert(symbol_node, parent_node, "Node")
+                    stack.push(temp2)
+                    stack.push(symbol_node)
+                    list_in[temp1]["wall"]["right"] = list_in[temp2]["xmin"]
+                    temp1 = temp2
+                    temp2 = self.__hor(list_in, temp1)
+            stack.push("EOBL")
+            while not stack.is_empty():
+                if stack.peek() == "EOBL":
+                    stack.pop()
+                symbol_node, temp1 = stack.pop(), stack.pop()
+                label = int(list_in[temp1]["label"])
+                upper_threshold = list_in[temp1]["ymin"] + ((1 / 6.5) * list_in[temp1]["h"])
+                lower_threshold = list_in[temp1]["ymin"] + ((5.5 / 6.5) * list_in[temp1]["h"])
+                left_threshold = (
+                    (list_in[temp1]["xmin"] + ((1 / 6) * list_in[temp1]["w"])) if label != 10 else list_in[temp1][
+                        "xmin"]
                 )
-                rightThreshold = (
-                    (listin[temp1]["xmax"] - ((1 / 6) * listin[temp1]["w"])) if label != 10 else listin[temp1]["xmax"]
+                right_threshold = (
+                    (list_in[temp1]["xmax"] - ((1 / 6) * list_in[temp1]["w"])) if label != 10 else list_in[temp1][
+                        "xmax"]
                 )
-                R = [
-                    {"above": [[leftThreshold, listin[temp1]["wall"]["top"]], [rightThreshold, upperThreshold]]},
-                    {"below": [[leftThreshold, lowerThreshold], [rightThreshold, listin[temp1]["wall"]["bottom"]]]},
+                r = [
+                    {"above": [[left_threshold, list_in[temp1]["wall"]["top"]], [right_threshold, upper_threshold]]},
+                    {"below": [[left_threshold, lower_threshold], [right_threshold, list_in[temp1]["wall"]["bottom"]]]},
                 ]
-                for region in R:
-                    # For each region, it looks for the initial symbol
+
+                def check():
+                    temp2 = self.__start(list_in, reg)
+                    if temp2 != -1:
+                        if not list_in[temp2]["checked"]:
+                            list_in[temp2]["checked"] = True
+                            list_in[temp2]["wall"]["left"] = reg[0][0]
+                            list_in[temp2]["wall"]["right"] = reg[1][0]
+                            list_in[temp2]["wall"]["top"] = reg[0][1]
+                            list_in[temp2]["wall"]["bottom"] = reg[1][1]
+                            relation_node = DS.RegionNode(list(region.keys())[0])
+                            tree.insert(relation_node, symbol_node, "Node")
+                            queue.enqueue(temp2)
+                            queue.enqueue(relation_node)
+
+                for region in r:
                     reg = region[list(region.keys())[0]]
                     region_name = list(region.keys())[0]
-                    # ( ) [ ] { } . * = neq + sqrt
                     operators = bool(label in range(11, 17) or label in range(27, 31) or label == 17 or label == 23)
                     if (region_name == "above" and not operators) or (region_name == "below" and not operators):
-                        temp2 = self.__start(listin, reg)
-                        if temp2 != -1:
-                            if not listin[temp2]["checked"]:
-                                listin[temp2]["checked"] = True
-                                listin[temp2]["wall"]["left"] = reg[0][0]
-                                listin[temp2]["wall"]["right"] = reg[1][0]
-                                listin[temp2]["wall"]["top"] = reg[0][1]
-                                listin[temp2]["wall"]["bottom"] = reg[1][1]
-                                RelationNode = DS.RegionNode(list(region.keys())[0])
-                                T.insert(RelationNode, SymbolNode, "Node")
-                                Q.enqueue(temp2)
-                                Q.enqueue(RelationNode)
-                R = [
+                        check()
+                r = [
                     {
                         "contains": [
-                            # left, top
-                            [listin[temp1]["xmin"], listin[temp1]["ymin"]],
-                            # right, bottom
-                            [listin[temp1]["xmax"], listin[temp1]["ymax"]],
+                            [list_in[temp1]["xmin"], list_in[temp1]["ymin"]],
+                            [list_in[temp1]["xmax"], list_in[temp1]["ymax"]],
                         ]
                     },
                     {
                         "super": [
-                            # left, top
-                            [rightThreshold, listin[temp1]["wall"]["top"]],
-                            # right, bottom
-                            [listin[temp1]["wall"]["right"], upperThreshold],
+                            [right_threshold, list_in[temp1]["wall"]["top"]],
+                            [list_in[temp1]["wall"]["right"], upper_threshold],
                         ]
                     },
                     {
                         "subsc": [
-                            # left, top
-                            [rightThreshold, lowerThreshold],
-                            # right, bottom
-                            [listin[temp1]["wall"]["right"], listin[temp1]["wall"]["bottom"]],
+                            [right_threshold, lower_threshold],
+                            [list_in[temp1]["wall"]["right"], list_in[temp1]["wall"]["bottom"]],
                         ]
                     },
                 ]
-                for region in R:
+                for region in r:
                     reg = region[list(region.keys())[0]]
                     region_name = list(region.keys())[0]
-                    # - ( ) [ ] { } . * = neq +
                     operators = bool(label == 10 or label in range(27, 31) or label == 17)
                     if (
                             (region_name == "super" and not operators)
                             or (region_name == "subsc" and not operators)
-                            or (region_name == "contains" and int(listin[temp1]["label"]) == 23)
+                            or (region_name == "contains" and int(list_in[temp1]["label"]) == 23)
                     ):
-                        temp2 = self.__start(listin, reg)
-                        if temp2 != -1:
-                            if not listin[temp2]["checked"]:
-                                listin[temp2]["checked"] = True
-                                listin[temp2]["wall"]["left"] = reg[0][0]
-                                listin[temp2]["wall"]["right"] = reg[1][0]
-                                listin[temp2]["wall"]["top"] = reg[0][1]
-                                listin[temp2]["wall"]["bottom"] = reg[1][1]
-                                RelationNode = DS.RegionNode(list(region.keys())[0])
-                                T.insert(RelationNode, SymbolNode, "Node")
-                                Q.enqueue(temp2)
-                                Q.enqueue(RelationNode)
-        return T
+                        check()
+        return tree
 
-    def __overlap(self, symbolIndex, top, bottom, listin):
-        listIndex = symbolIndex
-        stop = False
-        n = len(listin)
-        if listin[symbolIndex]["label"] == "10":
-            maxLength = listin[symbolIndex]["xmax"] - listin[symbolIndex]["xmin"]
+    @staticmethod
+    def __overlap(symbol_index, top, bottom, list_in):
+        list_index, stop, n, main_line = symbol_index, False, len(list_in), -1
+        if list_in[symbol_index]["label"] == "10":
+            max_length = list_in[symbol_index]["xmax"] - list_in[symbol_index]["xmin"]
         else:
-            maxLength = -1
-        mainLine = -1
-        while listIndex > 0 and stop == False:
-            if listin[listIndex - 1]["xmin"] <= listin[symbolIndex]["xmin"]:
-                listIndex = listIndex - 1  # stop = True
+            max_length = -1
+        while list_index > 0 and not stop:
+            if list_in[list_index - 1]["xmin"] <= list_in[symbol_index]["xmin"]:
+                list_index -= 1
             else:
-                stop = True  # listIndex = listIndex - 1
-        line1x = range(listin[symbolIndex]["xmin"], listin[symbolIndex]["xmax"] + 1)
+                stop = True
+        line1x = range(list_in[symbol_index]["xmin"], list_in[symbol_index]["xmax"] + 1)
         len_line1x = len(line1x)
-        while listIndex < n and listin[listIndex]["xmin"] < listin[symbolIndex]["xmax"]:
-            line2x = range(listin[listIndex]["xmin"], listin[listIndex]["xmax"] + 1)
+        while list_index < n and list_in[list_index]["xmin"] < list_in[symbol_index]["xmax"]:
+            line2x = range(list_in[list_index]["xmin"], list_in[list_index]["xmax"] + 1)
             len_line2x = len(line2x)
             x_set = set(line1x) if len_line1x < len_line2x else set(line2x)
             x_intersection = x_set.intersection(line1x if len_line1x >= len_line2x else line2x)
             min_line = min(len_line1x, len_line2x)
             if (
-                    not listin[listIndex]["checked"]
-                    and listin[listIndex]["label"] == "10"
-                    and listin[listIndex]["centroid"][1] >= top
-                    and listin[listIndex]["centroid"][1] <= bottom
-                    and listin[listIndex]["xmin"] <= (listin[symbolIndex]["xmin"] + 8)
+                    not list_in[list_index]["checked"]
+                    and list_in[list_index]["label"] == "10"
+                    and top <= list_in[list_index]["centroid"][1] <= bottom
+                    and list_in[list_index]["xmin"] <= (list_in[symbol_index]["xmin"] + 8)
                     and len(x_intersection) > (min_line / 2)
-                    and (listin[listIndex]["xmax"] - listin[listIndex]["xmin"]) > maxLength
+                    and (list_in[list_index]["xmax"] - list_in[list_index]["xmin"]) > max_length
             ):
-                maxLength = listin[listIndex]["xmax"] - listin[listIndex]["xmin"]
-                mainLine = listIndex
-
-            listIndex += 1
-        if mainLine == -1:
-            return symbolIndex
+                max_length = list_in[list_index]["xmax"] - list_in[list_index]["xmin"]
+                main_line = list_index
+            list_index += 1
+        if main_line == -1:
+            return symbol_index
         else:
-            return mainLine
+            return main_line
 
-    def __start(self, listin, R):
-        left = R[0][0]
-        top = R[0][1]
-        right = R[1][0]
-        bottom = R[1][1]
-        leftmostIndex = -1
-        listIndex = 0
-        n = len(listin)
-        while leftmostIndex == -1 and listIndex < n:
+    def __start(self, list_in, r):
+        left, top, right, bottom = r[0][0], r[0][1], r[1][0], r[1][1]
+        leftmost_index, list_index, n = -1, 0, len(list_in)
+        while leftmost_index == -1 and list_index < n:
             if (
-                    not listin[listIndex]["checked"]
-                    and listin[listIndex]["centroid"][0] >= left
-                    and listin[listIndex]["centroid"][1] >= top
-                    and listin[listIndex]["centroid"][0] <= right
-                    and listin[listIndex]["centroid"][1] <= bottom
+                    not list_in[list_index]["checked"]
+                    and list_in[list_index]["centroid"][0] >= left
+                    and list_in[list_index]["centroid"][1] >= top
+                    and list_in[list_index]["centroid"][0] <= right
+                    and list_in[list_index]["centroid"][1] <= bottom
             ):
-                leftmostIndex = listIndex
+                leftmost_index = list_index
             else:
-                listIndex = listIndex + 1
-        if leftmostIndex == -1:
-            return leftmostIndex
+                list_index = list_index + 1
+        if leftmost_index == -1:
+            return leftmost_index
         else:
-            return self.__overlap(leftmostIndex, top, bottom, listin)
+            return self.__overlap(leftmost_index, top, bottom, list_in)
 
-    def __sp(self, listin, R):
-        return self.__start(listin, R)
+    def __sp(self, list_in, r):
+        return self.__start(list_in, r)
 
-    def __hor(self, listin, index):
-        global stop
-        stop = False
-        global a
-        a = -1
-        label = int(listin[index]["label"])
-        right = listin[index]["wall"]["right"]
-        # to avoid get symbols behind
-        left = listin[index]["xmin"]
-        # to treat expoent and subscript
-        # 1/6
-        top = listin[index]["ymin"] + (listin[index]["h"] * (1 / 6.5))
-        # 5/6
-        bottom = listin[index]["ymin"] + (listin[index]["h"] * (5.5 / 6.5))
-        # it doesn't have expoent and subscript
+    def __hor(self, list_in, index):
+        stop, a, label = False, -1, int(list_in[index]["label"])
+        right, left = list_in[index]["wall"]["right"], list_in[index]["xmin"]
+        top = list_in[index]["ymin"] + (list_in[index]["h"] * (1 / 6.5))
+        bottom = list_in[index]["ymin"] + (list_in[index]["h"] * (5.5 / 6.5))
         if label == 10 or label in [27, 28, 29, 30]:
-            top = listin[index]["wall"]["top"]
-            bottom = listin[index]["wall"]["bottom"]
-        # if it is square root, the left wall id xmax
+            top, bottom = list_in[index]["wall"]["top"], list_in[index]["wall"]["bottom"]
         if label == 23:
-            left = listin[index]["xmax"]
-        # if it is horizontal line or brackets
+            left = list_in[index]["xmax"]
         if label in range(10, 17):
-            R = [[listin[index]["xmax"], top], [right, bottom]]
-            a = self.__start(listin, R)
-            stop = True
+            r = [[list_in[index]["xmax"], top], [right, bottom]]
+            a, stop = self.__start(list_in, r), True
         else:
-            for s in range(0, len(listin)):
-                checked = listin[s]["checked"]
-                if not checked:
-                    symbol = listin[s]
-                    if (
-                            left <= symbol["centroid"][0] <= right
-                            and bottom >= symbol["centroid"][1] >= top
-                    ):
-                        a = s
-                        stop = True
+            for s in range(0, len(list_in)):
+                if not list_in[s]["checked"]:
+                    symbol = list_in[s]
+                    if left <= symbol["centroid"][0] <= right and bottom >= symbol["centroid"][1] >= top:
+                        a, stop = s, True
                         break
         if stop and a != -1:
-            return self.__overlap(a, listin[a]["wall"]["top"], listin[a]["wall"]["bottom"], listin)
+            return self.__overlap(a, list_in[a]["wall"]["top"], list_in[a]["wall"]["bottom"], list_in)
         else:
             return -1
 
-    def __tree_to_list(self, tree, node=None):
+    @staticmethod
+    def __tree_to_list(tree, node=None):
         latex = []
 
-        def recur(root_node):
+        def recursive_to_list(root_node):
             current = tree.root_node if not root_node else root_node
             if current is None:
                 return
             if isinstance(current.data, str):
                 latex.append(current.data)
             else:
-                try:
-                    real_label = labels[current.data["label"]]
-                    if real_label == "{":
-                        real_label = "\\{"
-                    if real_label == "}":
-                        real_label = "\\}"
-                    current.data["label"] = real_label
-                    latex.append(current.data)
-                except BaseException as e:
-                    print("Exception: ", e)
-
+                real_label = labels[current.data["label"]]
+                if real_label == "{":
+                    real_label = "\\{"
+                if real_label == "}":
+                    real_label = "\\}"
+                current.data["label"] = real_label
+                latex.append(current.data)
             if current.node_type == "RegionNode":
                 latex.append("{")
-            for node in current.children:
-                recur(node)
+            for n in current.children:
+                recursive_to_list(n)
             if current.node_type == "RegionNode":
                 latex.append("}")
 
-        recur(node)
+        recursive_to_list(node)
         if latex[0] == "Expression":
             latex.remove("Expression")
             if latex[-1] == "}":
@@ -327,7 +269,6 @@ class StructuralAnalysis:
                 latex.reverse()
                 latex.pop()
                 latex.reverse()
-
         return latex
 
     def __list_to_latex_obj(self, tlist):
@@ -343,7 +284,6 @@ class StructuralAnalysis:
                 )
             else:
                 latex.append({"label": symbol, "prediction": [], "type": "context"})
-
         grammar = {
             "-": "frac",
             "below": "below",
@@ -353,48 +293,40 @@ class StructuralAnalysis:
             "subsc": "subsc",
             "neq": "neq",
         }
-
         subst = helpers.subst
         latex = self.__token_substitution(latex, grammar, subst)
         return latex
 
-    def __token_substitution(self, latex, grammar, subst):
-        def __list_substitution(i, nomatch, aux, initial_index, label, substitution_list, substitution_index):
-
-            for substitution in substitution_list[substitution_index]:
+    @staticmethod
+    def __token_substitution(latex, grammar, subst):
+        def __list_substitution(idx, nomatch, aux, initial_index, subst_list, substitution_index):
+            for substitution in subst_list[substitution_index]:
                 try:
-                    if latex[i]["label"] == substitution:
-                        aux.append({"index": i, "label": substitution_list[substitution_index][substitution]})
-                        i += 1
+                    if latex[idx]["label"] == substitution:
+                        aux.append({"index": idx, "label": subst_list[substitution_index][substitution]})
+                        idx += 1
                     else:
-                        i -= 1
+                        idx -= 1
                         nomatch = True
-
                 except IndexError:
                     nomatch = True
                     break
                 if nomatch:
-                    i = initial_index
+                    idx = initial_index
                     break
-            return i, nomatch
+            return idx, nomatch
 
-        def __change_label(i, label, substitution_list):
-            for substitution_index in range(0, len(substitution_list)):
-                nomatch = False
+        def __change_label(idx, subst_list):
+            for substitution_index in range(0, len(subst_list)):
                 aux = []
-                initial_index = i
-                i, nomatch = __list_substitution(
-                    i, nomatch, aux, initial_index, label, substitution_list, substitution_index
-                )
+                idx, nomatch = __list_substitution(idx, False, aux, idx, subst_list, substitution_index)
                 if not nomatch:
                     for matched in aux:
                         latex[matched["index"]]["label"] = matched["label"]
-            return i
+            return idx
 
         for i in range(0, len(latex)):
             if latex[i]["label"] in grammar:
-                label = grammar[latex[i]["label"]]
-                if label in subst:
-                    substitution_list = subst[label]  # list of substitutions
-                    i = __change_label(i, label, substitution_list)
+                if (label := grammar[latex[i]["label"]]) in subst:
+                    __change_label(i, subst[label])
         return latex

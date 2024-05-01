@@ -57,15 +57,11 @@ def t_eof(t):
 lexer = lex.lex()
 
 
-def LatexLexer(tstring):
+def latex_lexer(tstring):
     errors.clear()
     lexer.input(tstring)
     while True:
         tok = lexer.token()
         if not tok:
             return errors
-    return errors
 
-
-if __name__ == "__main__":
-    LatexLexer(input(":"))
