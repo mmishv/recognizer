@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 
-from mathreader.helpers.exceptions import *
-from mathreader.hmerecognizer import *
 import mathreader
+from mathreader.helpers.exceptions import GrammarError, LexicalError
+from mathreader.hmerecognizer import HMERecognizer
 
 
 class Example:
@@ -21,11 +21,10 @@ class Example:
                 print("\nLex errors: ", lex_errors)
                 print("\nPure Lex Errors:", pure_lex_errors)
                 print("\nOriginal Expression: ", latex_string_original)
-            except (GrammarError, CustomSyntaxError, LexicalError) as e:
+            except (GrammarError, LexicalError) as e:
                 if "latex_string_original" in e.data:
                     expression = e.data["latex_string_original"]
-                print("Exception: ", e.data)
-                print("Exception: ", e.valor)
+                print(e)
             print("\nExpression: ", expression)
             plt.text(0.5, 0.5, f"${expression}$", fontsize=12, horizontalalignment="center", verticalalignment="center")
             plt.axis("off")

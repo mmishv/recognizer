@@ -1,6 +1,5 @@
 from copy import copy
 
-from mathreader.hme_parser import correct_grammar
 from mathreader.hme_parser.grammar import lex as lex
 from mathreader.helpers.exceptions import LexicalError
 
@@ -61,11 +60,8 @@ class CheckLex:
                 self.lex_error_list = lex_errors
                 self.lex_errors_history = lex_errors_history
                 self.__first_error = False
-                self.__attempt_to_fix_error(lex_errors)
-        elif self.lex_error_list and \
-                not self.__first_error and \
-                self.attempts < 3 and \
-                self.latex_string:
+                self.__process_error(lex_errors)
+        elif self.lex_error_list and not self.__first_error and self.attempts < 3 and self.latex_string:
             second_lex_error_list = lex.latex_lexer(self.latex_string)
             if second_lex_error_list:
                 self.pure_lex_errors.extend(second_lex_error_list)
@@ -76,9 +72,8 @@ class CheckLex:
                 lex_errors, lex_errors_history = self.__locate_lex_error(second_lex_error_list)
                 self.lex_error_list = lex_errors
                 self.lex_errors_history = lex_errors_history
-                self.__attempt_to_fix_error(lex_errors)
-        elif (self.lex_error_list and self.attempts >= 3) or \
-                not self.latex_string:
+                self.__process_error(lex_errors)
+        elif (self.lex_error_list and self.attempts >= 3) or not self.latex_string:
             raise LexicalError({
                 'latex': self.latex,
                 'latex_list': self.latex_list,
@@ -95,16 +90,15 @@ class CheckLex:
             'pure_errors': self.pure_lex_errors
         }
 
-    def __attempt_to_fix_error(self, lex_errors):
-        bg = correct_grammar.CorrectGrammar()
-        corrected_data = bg.correct_grammar_lex(lex_errors, self.latex,
-                                                self.latex_list, 0,
-                                                self.lex_errors_history)
-        update_latex_string = corrected_data['latex_string']
-        self.lex_error_list = corrected_data['errors']
-        self.index = corrected_data['index']
+    def __process_error(self, lex_errors):
+        self.lex_error_list = lex_errors
         if self.lex_error_list:
             self.lex_errors_history = copy(self.lex_error_list)
-        self.latex_string = update_latex_string
         self.attempts += 1
         return self.check_correct_lex()
+
+
+# latex_string = "2x + 3 = y + *"
+# check_lex = CheckLex()
+# check_lex.latex_string = latex_string
+# result = check_lex.check_correct_lex()

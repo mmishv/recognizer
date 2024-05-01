@@ -1,7 +1,6 @@
 from copy import copy
 
 from mathreader.hme_parser.grammar import yacc as yacc
-from mathreader.hme_parser import correct_grammar as correct_grammar
 from mathreader.hme_parser import check_grammar_lex as check_grammar_lex
 from mathreader.helpers.exceptions import GrammarError
 
@@ -65,20 +64,9 @@ class CheckSyntax:
                 self.latex_string:
             yacc_error_list = yacc.latex_parse(self.latex_string)
             if yacc_error_list:
-                self.pure_yacc_errors.extend(yacc_error_list)
-                if yacc_error_list[0]['lexpos'] is None:
-                    yacc_error_list[0].update({
-                        'lexpos': len(self.latex_string) - 1
-                    })
-                    yacc_error_list[0].update({
-                        'value': self.latex_string[-1]
-                    })
-                yacc_errors, yacc_errors_history = self.__locate_grammar_error(yacc_error_list)
-                self.yacc_error_list = yacc_errors
-                self.yacc_errors_history = yacc_errors_history
+                yacc_errors = self.__process_yacc_errors(yacc_error_list)
                 self.__first_error = False
-                self.__attempt_to_fix_error(yacc_errors)
-
+                self.__process_error(yacc_errors)
         elif self.yacc_error_list and \
                 not self.__first_error and \
                 self.attempts < 3 and \
@@ -86,18 +74,8 @@ class CheckSyntax:
             self.__find_lexical_errors()
             second_yacc_error_list = yacc.latex_parse(self.latex_string)
             if second_yacc_error_list:
-                self.pure_yacc_errors.extend(second_yacc_error_list)
-                if second_yacc_error_list[0]['lexpos'] is None:
-                    second_yacc_error_list[0].update({
-                        'lexpos': len(self.latex_string) - 1
-                    })
-                    second_yacc_error_list[0].update({
-                        'value': self.latex_string[-1]
-                    })
-                yacc_errors, yacc_errors_history = self.__locate_grammar_error(second_yacc_error_list)
-                self.yacc_error_list = yacc_errors
-                self.yacc_errors_history = yacc_errors_history
-                self.__attempt_to_fix_error(yacc_errors)
+                yacc_errors = self.__process_yacc_errors(second_yacc_error_list)
+                self.__process_error(yacc_errors)
 
         elif (self.yacc_error_list and self.attempts >= 3) or \
                 not self.latex_string:
@@ -119,6 +97,20 @@ class CheckSyntax:
             'lex_pure_errors': self.pure_lex_errors
         }
 
+    def __process_yacc_errors(self, yacc_error_list):
+        self.pure_yacc_errors.extend(yacc_error_list)
+        if yacc_error_list[0]['lexpos'] is None:
+            yacc_error_list[0].update({
+                'lexpos': len(self.latex_string) - 1
+            })
+            yacc_error_list[0].update({
+                'value': self.latex_string[-1]
+            })
+        yacc_errors, yacc_errors_history = self.__locate_grammar_error(yacc_error_list)
+        self.yacc_error_list = yacc_errors
+        self.yacc_errors_history = yacc_errors_history
+        return yacc_errors
+
     def __find_lexical_errors(self):
         cgl = check_grammar_lex.CheckLex()
         cgl.latex_string = self.latex_string
@@ -133,18 +125,9 @@ class CheckSyntax:
         lex_errors_history = check_lex_data['errors_history']
         self.lex_errors_history.extend(lex_errors_history)
 
-    def __attempt_to_fix_error(self, yacc_errors):
-        bg = correct_grammar.CorrectGrammar()
-        fix_attempts = self.lex_errors_history.copy()
-        fix_attempts.extend(self.yacc_errors_history)
-        corrected_data = bg.correct_grammar_lex(yacc_errors, self.latex,
-                                                self.latex_list, 0,
-                                                fix_attempts)
-        updated_latex_string = corrected_data['latex_string']
-        self.yacc_error_list = corrected_data['errors']
-        self.index = corrected_data['index']
+    def __process_error(self, yacc_errors):
+        self.yacc_error_list = yacc_errors
         if self.yacc_error_list:
             self.yacc_errors_history = copy(self.yacc_error_list)
-        self.latex_string = updated_latex_string
         self.attempts += 1
         return self.check_correct_grammar()

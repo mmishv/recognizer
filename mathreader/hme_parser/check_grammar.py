@@ -1,6 +1,6 @@
 from mathreader.hme_parser import check_grammar_lex as check_grammar_lex
 from mathreader.hme_parser import check_grammar_yacc as check_grammar_yacc
-from mathreader.helpers.exceptions import GrammarError, LexicalError, CustomSyntaxError
+from mathreader.helpers.exceptions import GrammarError, LexicalError
 
 
 class CheckGrammar:
@@ -18,7 +18,7 @@ class CheckGrammar:
             check_yacc_data = self.__check_yacc(check_lex_data)
             check_yacc_data.update({'latex_string_original': latex_string})
             return check_yacc_data
-        except (GrammarError, CustomSyntaxError, LexicalError) as ex:
+        except (GrammarError, LexicalError) as ex:
             ex.data.update({'latex_string_original': latex_string})
             raise ex
 
