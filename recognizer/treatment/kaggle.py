@@ -1,4 +1,4 @@
-from mathreader.image_processing import preprocessing as preprocessing
+from recognizer.image_processing import preprocessing as preprocessing
 import numpy as np
 import cv2
 import os

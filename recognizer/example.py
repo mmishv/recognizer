@@ -1,16 +1,17 @@
 from matplotlib import pyplot as plt
 
-import mathreader
-from mathreader.helpers.exceptions import GrammarError, LexicalError
-from mathreader.hmerecognizer import HMERecognizer
+
+from recognizer.helpers.exceptions import GrammarError, LexicalError
+import recognizer
+from recognizer.hme_recognizer import Recognizer
 
 
 class Example:
     def __init__(self):
         expression = ""
-        hme_recognizer = HMERecognizer()
+        hme_recognizer = Recognizer()
         #  9, 79, 37b - not solve (
-        images = [mathreader.__path__[0] + "/images/37b.png"]
+        images = [recognizer.__path__[0] + "/images/9.png"]
         for image in images:
             try:
                 hme_recognizer.load_image(image, data_type="path")

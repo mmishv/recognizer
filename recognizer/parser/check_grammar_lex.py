@@ -1,7 +1,7 @@
 from copy import copy
 
-from mathreader.hme_parser.grammar import lex as lex
-from mathreader.helpers.exceptions import LexicalError
+from recognizer.parser.grammar import lex as lex
+from recognizer.helpers.exceptions import LexicalError
 
 
 class CheckLex:
@@ -49,10 +49,7 @@ class CheckLex:
         return lex_errors, lex_errors_history
 
     def check_correct_lex(self):
-        if not self.lex_error_list and \
-                self.__first_error and \
-                self.attempts < 3 and \
-                self.latex_string:
+        if not self.lex_error_list and self.__first_error and self.attempts < 3 and self.latex_string:
             lex_error_list = lex.latex_lexer(self.latex_string)
             if lex_error_list:
                 self.pure_lex_errors.extend(lex_error_list)

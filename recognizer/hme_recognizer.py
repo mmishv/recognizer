@@ -1,11 +1,13 @@
 import base64
 
 import cv2
-from mathreader.hme_parser import parser as parser
-from mathreader.recognize import *
+import numpy as np
+
+from recognizer.parser import parser
+from recognizer.recognize import Recognize
 
 
-class HMERecognizer:
+class Recognizer:
     def __init__(self):
         self.expression_after_parser = None
         self.expression_after_recognition = None

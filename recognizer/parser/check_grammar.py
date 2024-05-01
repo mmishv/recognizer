@@ -1,6 +1,6 @@
-from mathreader.hme_parser import check_grammar_lex as check_grammar_lex
-from mathreader.hme_parser import check_grammar_yacc as check_grammar_yacc
-from mathreader.helpers.exceptions import GrammarError, LexicalError
+from recognizer.parser import check_grammar_lex as check_grammar_lex
+from recognizer.parser import check_grammar_yacc as check_grammar_yacc
+from recognizer.helpers.exceptions import GrammarError, LexicalError
 
 
 class CheckGrammar:

@@ -1,12 +1,14 @@
+import os
+
 import cv2 as cv
 import numpy as np
 from tensorflow.keras.models import load_model
 
-from mathreader import helpers
-from mathreader.image_processing import postprocessing as postprocessing
-from mathreader.image_processing import preprocessing as preprocessing
+from recognizer.helpers import get_labels
+from recognizer.image_processing import postprocessing as postprocessing
+from recognizer.image_processing import preprocessing as preprocessing
 
-helpers_labels = helpers.get_labels()
+helpers_labels = get_labels()
 labels = helpers_labels["labels_parser"]
 
 
@@ -29,8 +31,7 @@ class Recognize:
     def classification(img):
         img = img.reshape(1, 28, 28, 1)
         model = load_model(
-            "/home/user/PycharmProjects/recognizer/mathreader-training/training/model/model_26-04-2024_03-54-57-BEST.h5"
-            # "/home/user/PycharmProjects/recognizer/mathreader-training/training/model/model_26-04-2024_03-37-47.h5"
+            os.path.dirname(os.path.realpath(__file__)) + "/training/model/model_26-04-2024_03-54-57-BEST.h5"
         )
         prediction = model.predict(img)
         index = np.argmax(prediction)

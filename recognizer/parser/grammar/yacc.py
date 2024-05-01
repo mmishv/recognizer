@@ -1,5 +1,5 @@
-from mathreader.hme_parser.grammar import lex
-from mathreader.hme_parser.grammar.lex import tokens
+from recognizer.parser.grammar import lex
+from recognizer.parser.grammar.lex import tokens
 import ply.yacc as yacc
 
 

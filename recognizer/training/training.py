@@ -19,7 +19,7 @@ configs = {
     },
     "image": {"width": 28, "height": 28, "channels": 1},
     "nn_output": 30,
-    "model": {"epochs": 3, "batch_size": 512},
+    "model": {"epochs": 100, "batch_size": 512},
     "path": {
         "chart": path + "training/charts/",
         "model": path + "training/model/",

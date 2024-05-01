@@ -1,7 +1,7 @@
 import re
 
-from mathreader import helpers
-from mathreader.helpers import data_structures as DS
+from recognizer import helpers
+from recognizer.helpers import data_structures as DS
 
 helpers_labels = helpers.get_labels()
 labels = helpers_labels["labels_parser"]

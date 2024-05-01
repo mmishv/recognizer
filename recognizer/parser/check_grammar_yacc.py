@@ -1,12 +1,11 @@
 from copy import copy
 
-from mathreader.hme_parser.grammar import yacc as yacc
-from mathreader.hme_parser import check_grammar_lex as check_grammar_lex
-from mathreader.helpers.exceptions import GrammarError
+from recognizer.parser.grammar import yacc as yacc
+from recognizer.parser import check_grammar_lex as check_grammar_lex
+from recognizer.helpers.exceptions import GrammarError
 
 
 class CheckSyntax:
-
     def __init__(self):
         self.__first_error = True
         self.latex_string = ""
@@ -58,19 +57,13 @@ class CheckSyntax:
         return yacc_errors, yacc_errors_history
 
     def check_correct_grammar(self):
-        if not self.yacc_error_list and \
-                self.__first_error and \
-                self.attempts < 3 and \
-                self.latex_string:
+        if not self.yacc_error_list and self.__first_error and self.attempts < 3 and self.latex_string:
             yacc_error_list = yacc.latex_parse(self.latex_string)
             if yacc_error_list:
                 yacc_errors = self.__process_yacc_errors(yacc_error_list)
                 self.__first_error = False
                 self.__process_error(yacc_errors)
-        elif self.yacc_error_list and \
-                not self.__first_error and \
-                self.attempts < 3 and \
-                self.latex_string:
+        elif self.yacc_error_list and not self.__first_error and self.attempts < 3 and self.latex_string:
             self.__find_lexical_errors()
             second_yacc_error_list = yacc.latex_parse(self.latex_string)
             if second_yacc_error_list:

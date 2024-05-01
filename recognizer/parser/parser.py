@@ -1,5 +1,5 @@
-from mathreader.hme_parser import check_grammar as cg
-from mathreader.hme_parser import structural_analysis as sa
+from recognizer.parser import check_grammar as cg
+from recognizer.parser import structural_analysis as sa
 
 
 class Parser:

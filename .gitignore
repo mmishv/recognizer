@@ -106,9 +106,9 @@ cython_debug/
 #.idea/
 
 opt/
-/mathreader/images/
-/mathreader-training/treatment/datasets/kaggle/
-/mathreader-training/treatment/treated_data/
-/mathreader-training/training/charts/
-/mathreader-training/training/history/
-/mathreader-training/training/model/
+/recognizer/images/
+/recognizer/treatment/datasets/kaggle/
+/recognizer/treatment/treated_data/
+/recognizer/training/charts/
+/recognizer/training/history/
+/recognizer/training/model/
