@@ -1,0 +1,15 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "compilerOptions": {
+    "target": "esnext",
+    "moduleResolution": "node",
+    "types": ["node", "vite/client"],
+    "verbatimModuleSyntax": false,
+    "module": "esnext",
+    "lib": ["esnext", "dom"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue"]
+}

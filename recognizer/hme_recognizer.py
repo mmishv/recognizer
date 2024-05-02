@@ -7,7 +7,7 @@ from recognizer.parser import parser
 from recognizer.recognize import Recognize
 
 
-class Recognizer:
+class HMERecognizer:
     def __init__(self):
         self.expression_after_parser = None
         self.expression_after_recognition = None

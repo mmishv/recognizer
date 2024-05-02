@@ -1,0 +1,19 @@
+# backend
+fastapi==0.105.0
+httpx==0.24.1
+pydantic-settings==2.0.2
+pydantic==2.1.1
+uvicorn==0.22.0
+python-multipart==0.0.6
+pillow==10.3.0
+
+# recognizer
+cuda-python==12.4.0
+numpy==1.26.2
+opencv-python==4.9.0.80
+ply==3.11
+requests==2.25.1
+tensorrt
+tensorflow==2.10.0
+keras==2.10.0
+matplotlib==3.8.4

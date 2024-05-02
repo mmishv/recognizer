@@ -1,0 +1,2 @@
+class ExternalException(Exception):
+    pass

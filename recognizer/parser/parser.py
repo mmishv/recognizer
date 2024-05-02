@@ -21,7 +21,7 @@ class Parser:
             if symbol['label'] != '' and symbol['label'] != 'contains':
                 latex.append(symbol)
                 latex_list.append(symbol['label'])
-        latex_string = "".join(latex_list)
+        latex_string = " ".join(latex_list)
         latex_string = self.__remove_contains(latex_string)
         return {
             'latex': latex,
