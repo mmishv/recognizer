@@ -8,8 +8,6 @@ from ports.services.latex_visualizer.latex_visualizer import ILatexVisualizer
 class LatexVisualizer(ILatexVisualizer):
 
     def visualize(self, expression: str) -> str:
-        if expression.startswith("\\sqrt"):
-            expression = expression.replace("\\sqrt", "\\sqrt{\\phantom{x}}")
         plt.text(0.5, 0.5, f"${expression}$", fontsize=50, horizontalalignment="center", verticalalignment="center")
         plt.axis("off")
         img_buffer = BytesIO()

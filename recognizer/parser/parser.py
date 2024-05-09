@@ -21,7 +21,7 @@ class Parser:
             if symbol['label'] != '' and symbol['label'] != 'contains':
                 latex.append(symbol)
                 latex_list.append(symbol['label'])
-        latex_string = " ".join(latex_list)
+        latex_string = "".join(latex_list)
         latex_string = self.__remove_contains(latex_string)
         return {
             'latex': latex,
@@ -33,8 +33,6 @@ class Parser:
     def parse(self):
         structural_analysis = sa.StructuralAnalysis(self.symbols)
         structured_data = structural_analysis.analyze()
-        if not structured_data:
-            return
         latex_data = self.organize_latex_data(structured_data['latex'])
         check_grammar = cg.CheckGrammar()
         check_grammar_data = check_grammar.check(latex_data)

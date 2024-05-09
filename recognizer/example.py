@@ -3,15 +3,15 @@ from matplotlib import pyplot as plt
 
 from recognizer.helpers.exceptions import GrammarError, LexicalError
 import recognizer
-from recognizer.hme_recognizer import Recognizer
+from recognizer.hme_recognizer import HMERecognizer
 
 
 class Example:
     def __init__(self):
         expression = ""
-        hme_recognizer = Recognizer()
+        hme_recognizer = HMERecognizer()
         #  9, 79, 37b - not solve (
-        images = [recognizer.__path__[0] + "/images/9.png"]
+        images = [recognizer.__path__[0] + "/images/58.png"]
         for image in images:
             try:
                 hme_recognizer.load_image(image, data_type="path")

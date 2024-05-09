@@ -43,7 +43,6 @@ class Recognize:
         }
 
     def to_recognize(self):
-
         expression = {}
         p = preprocessing.ImagePreprocessing()
         segmentation, normalized_image = p.treatment(self.image)
@@ -51,15 +50,11 @@ class Recognize:
             for s in segmentation:
                 reconhecer = self.classification(s["image"])
                 reconhecer["label"] = str(reconhecer["label"])
-
                 s["label"] = reconhecer["label"]
                 s["prediction"] = reconhecer["prediction"]
-
                 symbol_prediction = {"identity": labels[s["label"]]}
-
                 symbol_prediction.update(reconhecer)
                 self.prediction.append(symbol_prediction)
-
         except Exception as e:
             print(e)
         pos = postprocessing.ImagePostprocessing(normalized_image)

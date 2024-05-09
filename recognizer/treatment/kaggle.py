@@ -96,7 +96,7 @@ def get_symbols():
             for filename in f:
                 if re.search("\.(jpg|jpeg|png)$", filename, re.IGNORECASE):
                     image = cv2.imread(main_dir + files + filename)
-                    image = preprocessing.ImagePreprocessing(configs).treatment_sem_segment(image)
+                    image = preprocessing.ImagePreprocessing(configs).treatment_segment(image)
                     if image and count <= training_size:
                         train_images.append(image)
                         train_labels.append(labels[files])

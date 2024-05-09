@@ -19,7 +19,7 @@ configs = {
     },
     "image": {"width": 28, "height": 28, "channels": 1},
     "nn_output": 30,
-    "model": {"epochs": 100, "batch_size": 512},
+    "model": {"epochs": 170, "batch_size": 448},
     "path": {
         "chart": path + "training/charts/",
         "model": path + "training/model/",
@@ -30,17 +30,15 @@ configs = {
 
 nn = TrainingModel(configs)
 
-training_arc = [
-    {
-        "conv2d1": {"filters": 32, "size": (3, 3)},
-        "conv2d2": {"filters": 64, "size": (3, 3)},
-        "conv2d3": {"filters": 32, "size": (3, 3)},
-        "dense1": 768,
-        "dense2": 192,
-        "dense3": False,
-        "lr": 0.001,
-    }
-]
+training_arc = {
+    "conv2d1": {"filters": 32, "size": (3, 3)},
+    "conv2d2": {"filters": 64, "size": (3, 3)},
+    "conv2d3": {"filters": 32, "size": (3, 3)},
+    "dense1": 768,
+    "dense2": 192,
+    "dense3": False,
+    "lr": 0.001,
+}
 
 
 def classifier_func(training_arc):
@@ -62,6 +60,6 @@ def classifier_func(training_arc):
     return classifier
 
 
-nn.set_model(classifier_func, training_arc[0])
+nn.set_model(classifier_func, training_arc)
 nn.train()
 nn.save_model()

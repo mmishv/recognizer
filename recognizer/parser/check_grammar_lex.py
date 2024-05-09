@@ -27,17 +27,17 @@ class CheckLex:
                 error = error['label'], error['pos']
             if error[1] != -1:
                 count = 0
-                count_list = 0
+                position_list = 0
                 latex_error_pos = error[1]
                 latex_error_token = error[0]
                 for symbol in latex:
                     if symbol['label'] != latex_error_token:
                         count += len(symbol['label'])
-                        count_list += 1
+                        position_list += 1
                     elif count == latex_error_pos:
                         lex_errors.append({
                             'pos': latex_error_pos,
-                            'pos_list': count_list,
+                            'pos_list': position_list,
                             'label': symbol['label'],
                             'prediction': symbol['prediction'],
                             'attempts': [symbol['label']]

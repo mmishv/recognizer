@@ -10,11 +10,9 @@ class CheckGrammar:
         self.__attempts_grammar = 0
 
     def check(self, latex_data):
-        latex = latex_data['latex']
-        latex_list = latex_data['latex_list']
         latex_string = latex_data['latex_string']
         try:
-            check_lex_data = self.__check_lex(latex_string, latex, latex_list)
+            check_lex_data = self.__check_lex(latex_string, latex_data['latex'], latex_data['latex_list'])
             check_yacc_data = self.__check_yacc(check_lex_data)
             check_yacc_data.update({'latex_string_original': latex_string})
             return check_yacc_data
@@ -28,8 +26,7 @@ class CheckGrammar:
         cgl.latex = latex
         cgl.latex_list = latex_list
         cgl.attempts = self.__attempts_lex
-        check_lex_data = cgl.check_correct_lex()
-        return check_lex_data
+        return cgl.check_correct_lex()
 
     def __check_yacc(self, check_lex_data=None):
         cgs = check_grammar_yacc.CheckSyntax()

@@ -12,7 +12,6 @@ class CheckSyntax:
         self.latex = ""
         self.latex_list = ""
         self.attempts = 0
-        self.index = 0
         self.lex_errors_history = []
         self.yacc_errors_history = []
         self.yacc_error_list = None
@@ -28,30 +27,19 @@ class CheckSyntax:
         self.pure_lex_errors = check_lex_data['pure_errors']
 
     def __locate_grammar_error(self, yacc_error_list):
-        yacc_error_list = copy(yacc_error_list)
-        latex = copy(self.latex)
-        yacc_errors = []
+        yacc_error_list, latex, yacc_errors = copy(yacc_error_list), copy(self.latex), []
         yacc_errors_history = self.yacc_errors_history.copy()
         for error in yacc_error_list:
             if error['value'] is not None:
-                count = 0
-                count_list = 0
-                latex_error_pos = error['lexpos']
-                latex_error_token = error['value']
+                count, position_list, latex_error_pos, latex_error_token = 0, 0, error['lexpos'], error['value']
                 for symbol in latex:
-                    if symbol['label'] == latex_error_token and \
-                            count == latex_error_pos:
-                        yacc_errors.append({
-                            'pos': latex_error_pos,
-                            'pos_list': count_list,
-                            'label': symbol['label'],
-                            'prediction': symbol['prediction'],
-                            'attempts': [symbol['label']]
-                        })
+                    if symbol['label'] == latex_error_token and count == latex_error_pos:
+                        yacc_errors.append({'pos': latex_error_pos, 'pos_list': position_list, 'label': symbol['label'],
+                                            'prediction': symbol['prediction'], 'attempts': [symbol['label']]})
                         yacc_errors_history.extend(yacc_errors)
                         break
                     count += len(symbol['label'])
-                    count_list += 1
+                    position_list += 1
             else:
                 continue
         return yacc_errors, yacc_errors_history
@@ -70,8 +58,7 @@ class CheckSyntax:
                 yacc_errors = self.__process_yacc_errors(second_yacc_error_list)
                 self.__process_error(yacc_errors)
 
-        elif (self.yacc_error_list and self.attempts >= 3) or \
-                not self.latex_string:
+        elif (self.yacc_error_list and self.attempts >= 3) or not self.latex_string:
             raise GrammarError({
                 'latex': self.latex,
                 'latex_list': self.latex_list,

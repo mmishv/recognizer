@@ -12,11 +12,9 @@ class StructuralAnalysis:
         self.symbols = symbol_list
 
     def analyze(self):
-        tree = self.__main_parsing(self.__preprocessing(self.symbols))
-        if not tree:
+        if not (tree := self.__main_parsing(self.__preprocessing(self.symbols))):
             return
-        tlist = self.__tree_to_list(tree)
-        latex = self.__list_to_latex_obj(tlist)
+        latex = self.__list_to_latex_obj((tlist := self.__tree_to_list(tree)))
         return {"latex": latex, "tree": tree, "tlist": tlist}
 
     @staticmethod
@@ -32,13 +30,7 @@ class StructuralAnalysis:
                 s["type"] = "Close"
             else:
                 s["type"] = "Normal"
-            if (
-                    re.search("^[0-9]$", str(s["label"]))
-                    or s["label"] == "19"
-                    or s["label"] == "23"
-                    or s["type"] == "Open"
-                    or s["type"] == "Close"
-            ):
+            if re.search("^[0-9]$", str(s["label"])) or s["label"] in ["19", "23"] or s["type"] in ["Open", "Close"]:
                 s["centroid_class"] = "Ascending"
                 s["centroid"][1] = s["ymin"] + (2 / 3) * (s["h"])  # 3/5
             elif s["label"] == "25":
@@ -55,8 +47,7 @@ class StructuralAnalysis:
         return symbols
 
     def __main_parsing(self, symbols):
-        list_in, tree, queue, stack = symbols, DS.Tree(), DS.Queue(), DS.Stack()
-        r = [[0, 0], [9999999999, 9999999999]]
+        list_in, tree, queue, stack, r = symbols, DS.Tree(), DS.Queue(), DS.Stack(), [[0, 0], [9999999999, 9999999999]]
         if (start := self.__sp(list_in, r)) == -1:
             return
         queue.enqueue(start)
@@ -69,8 +60,7 @@ class StructuralAnalysis:
                 tree.insert(symbol_node, parent_node, "Node")
                 stack.push(temp1)
                 stack.push(symbol_node)
-                temp2 = self.__hor(list_in, temp1)
-                while temp2 != -1:
+                while (temp2 := self.__hor(list_in, temp1)) != -1:
                     list_in[temp2]["checked"] = True
                     list_in[temp2]["wall"] = list_in[temp1]["wall"].copy()
                     symbol_node = DS.SymbolNode(list_in[temp2])
@@ -79,77 +69,51 @@ class StructuralAnalysis:
                     stack.push(symbol_node)
                     list_in[temp1]["wall"]["right"] = list_in[temp2]["xmin"]
                     temp1 = temp2
-                    temp2 = self.__hor(list_in, temp1)
+                    self.__hor(list_in, temp1)
             stack.push("EOBL")
             while not stack.is_empty():
                 if stack.peek() == "EOBL":
                     stack.pop()
                 symbol_node, temp1 = stack.pop(), stack.pop()
-                label = int(list_in[temp1]["label"])
+                label, l_t1 = int(list_in[temp1]["label"]), list_in[temp1]
                 upper_threshold = list_in[temp1]["ymin"] + ((1 / 6.5) * list_in[temp1]["h"])
                 lower_threshold = list_in[temp1]["ymin"] + ((5.5 / 6.5) * list_in[temp1]["h"])
-                left_threshold = (
-                    (list_in[temp1]["xmin"] + ((1 / 6) * list_in[temp1]["w"])) if label != 10 else list_in[temp1][
-                        "xmin"]
-                )
-                right_threshold = (
-                    (list_in[temp1]["xmax"] - ((1 / 6) * list_in[temp1]["w"])) if label != 10 else list_in[temp1][
-                        "xmax"]
-                )
+                left_threshold = l_t1["xmin"] + 1 / 6 * l_t1["w"] if label != 10 else l_t1["xmin"]
+                right_threshold = l_t1["xmax"] - 1 / 6 * l_t1["w"] if label != 10 else l_t1["xmax"]
                 r = [
-                    {"above": [[left_threshold, list_in[temp1]["wall"]["top"]], [right_threshold, upper_threshold]]},
-                    {"below": [[left_threshold, lower_threshold], [right_threshold, list_in[temp1]["wall"]["bottom"]]]},
+                    {"above": [[left_threshold, l_t1["wall"]["top"]], [right_threshold, upper_threshold]]},
+                    {"below": [[left_threshold, lower_threshold], [right_threshold, l_t1["wall"]["bottom"]]]},
                 ]
 
                 def check():
-                    temp2 = self.__start(list_in, reg)
-                    if temp2 != -1:
-                        if not list_in[temp2]["checked"]:
-                            list_in[temp2]["checked"] = True
-                            list_in[temp2]["wall"]["left"] = reg[0][0]
-                            list_in[temp2]["wall"]["right"] = reg[1][0]
-                            list_in[temp2]["wall"]["top"] = reg[0][1]
-                            list_in[temp2]["wall"]["bottom"] = reg[1][1]
+                    if (tmp2 := self.__start(list_in, reg)) != -1:
+                        if not list_in[tmp2]["checked"]:
+                            list_in[tmp2]["checked"] = True
+                            list_in[tmp2]["wall"]["left"] = reg[0][0]
+                            list_in[tmp2]["wall"]["right"] = reg[1][0]
+                            list_in[tmp2]["wall"]["top"] = reg[0][1]
+                            list_in[tmp2]["wall"]["bottom"] = reg[1][1]
                             relation_node = DS.RegionNode(list(region.keys())[0])
                             tree.insert(relation_node, symbol_node, "Node")
-                            queue.enqueue(temp2)
+                            queue.enqueue(tmp2)
                             queue.enqueue(relation_node)
 
                 for region in r:
-                    reg = region[list(region.keys())[0]]
-                    region_name = list(region.keys())[0]
-                    operators = bool(label in range(11, 17) or label in range(27, 31) or label == 17 or label == 23)
-                    if (region_name == "above" and not operators) or (region_name == "below" and not operators):
+                    reg, region_name = region[list(region.keys())[0]], list(region.keys())[0]
+                    operators = bool(label in range(11, 17) or label in range(27, 31) or label in [17, 23])
+                    if region_name in ["above", 'below'] and not operators:
                         check()
+                l_t1 = list_in[temp1]
                 r = [
-                    {
-                        "contains": [
-                            [list_in[temp1]["xmin"], list_in[temp1]["ymin"]],
-                            [list_in[temp1]["xmax"], list_in[temp1]["ymax"]],
-                        ]
-                    },
-                    {
-                        "super": [
-                            [right_threshold, list_in[temp1]["wall"]["top"]],
-                            [list_in[temp1]["wall"]["right"], upper_threshold],
-                        ]
-                    },
-                    {
-                        "subsc": [
-                            [right_threshold, lower_threshold],
-                            [list_in[temp1]["wall"]["right"], list_in[temp1]["wall"]["bottom"]],
-                        ]
-                    },
+                    {"contains": [[l_t1["xmin"], l_t1["ymin"]], [l_t1["xmax"], l_t1["ymax"]]]},
+                    {"super": [[right_threshold, l_t1["wall"]["top"]], [l_t1["wall"]["right"], upper_threshold]]},
+                    {"subsc": [[right_threshold, lower_threshold], [l_t1["wall"]["right"], l_t1["wall"]["bottom"]]]}
                 ]
                 for region in r:
-                    reg = region[list(region.keys())[0]]
-                    region_name = list(region.keys())[0]
-                    operators = bool(label == 10 or label in range(27, 31) or label == 17)
-                    if (
-                            (region_name == "super" and not operators)
-                            or (region_name == "subsc" and not operators)
-                            or (region_name == "contains" and int(list_in[temp1]["label"]) == 23)
-                    ):
+                    reg, region_name = region[list(region.keys())[0]], list(region.keys())[0]
+                    operators = bool(label in [10, 27] or label in range(27, 31))
+                    if (region_name in ["super", "subsc"] and not operators) or (
+                            region_name == "contains" and int(l_t1["label"]) == 23):
                         check()
         return tree
 
@@ -184,13 +148,10 @@ class StructuralAnalysis:
                 max_length = list_in[list_index]["xmax"] - list_in[list_index]["xmin"]
                 main_line = list_index
             list_index += 1
-        if main_line == -1:
-            return symbol_index
-        else:
-            return main_line
+        return symbol_index if main_line == -1 else main_line
 
     def __start(self, list_in, r):
-        left, top, right, bottom = r[0][0], r[0][1], r[1][0], r[1][1]
+        left, top, right, bottom, = r[0][0], r[0][1], r[1][0], r[1][1]
         leftmost_index, list_index, n = -1, 0, len(list_in)
         while leftmost_index == -1 and list_index < n:
             if (
@@ -203,10 +164,7 @@ class StructuralAnalysis:
                 leftmost_index = list_index
             else:
                 list_index = list_index + 1
-        if leftmost_index == -1:
-            return leftmost_index
-        else:
-            return self.__overlap(leftmost_index, top, bottom, list_in)
+        return leftmost_index if leftmost_index == -1 else self.__overlap(leftmost_index, top, bottom, list_in)
 
     def __sp(self, list_in, r):
         return self.__start(list_in, r)
@@ -230,18 +188,15 @@ class StructuralAnalysis:
                     if left <= symbol["centroid"][0] <= right and bottom >= symbol["centroid"][1] >= top:
                         a, stop = s, True
                         break
-        if stop and a != -1:
-            return self.__overlap(a, list_in[a]["wall"]["top"], list_in[a]["wall"]["bottom"], list_in)
-        else:
-            return -1
+        return self.__overlap(a, list_in[a]["wall"]["top"], list_in[a]["wall"]["bottom"],
+                              list_in) if stop and a != -1 else -1
 
     @staticmethod
     def __tree_to_list(tree, node=None):
         latex = []
 
         def recursive_to_list(root_node):
-            current = tree.root_node if not root_node else root_node
-            if current is None:
+            if not (current := tree.root_node if not root_node else root_node):
                 return
             if isinstance(current.data, str):
                 latex.append(current.data)
@@ -284,18 +239,9 @@ class StructuralAnalysis:
                 )
             else:
                 latex.append({"label": symbol, "prediction": [], "type": "context"})
-        grammar = {
-            "-": "frac",
-            "below": "below",
-            "sqrt": "sqrt",
-            "super": "super",
-            "*": "mult",
-            "subsc": "subsc",
-            "neq": "neq",
-        }
-        subst = helpers.subst
-        latex = self.__token_substitution(latex, grammar, subst)
-        return latex
+        grammar = {"-": "frac", "below": "below", "sqrt": "sqrt", "super": "super", "*": "mult", "subsc": "subsc",
+                   "neq": "neq"}
+        return self.__token_substitution(latex, grammar, helpers.subst)
 
     @staticmethod
     def __token_substitution(latex, grammar, subst):
